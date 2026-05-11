@@ -36,6 +36,7 @@ const html = `
 //rest api
 
 app.get('/api/users', (req, res) => {
+    res.setHeader('X-myname', 'Parth');
     res.json(users);
 });
 
