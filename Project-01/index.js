@@ -5,7 +5,21 @@ const fs = require('fs');
 const app = express();
 const PORT = 8000;
 
-app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
+
+
+app.use((req, res, next) => {
+    fs.appendFile("log.txt", `${new Date().toISOString()}: ${req.method}: ${req.path}\n`, (err,data) => {
+        next();
+    }
+);
+});
+
+// app.use((req, res, next) => {
+//     console.log("hello from middleware 1");
+//     // return res.json({ msg: "hello from middleware 1" });
+//     next();
+// });
 
 //routes
 
