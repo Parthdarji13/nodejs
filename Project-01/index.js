@@ -5,8 +5,8 @@ const fs = require('fs');
 const app = express();
 const PORT = 8000;
 
-app.use(express.urlencoded({ extended: false }));
-
+// app.use(express.urlencoded({ extended: false }));
+app.use(express.json());
 
 app.use((req, res, next) => {
     fs.appendFile("log.txt", `${new Date().toISOString()}: ${req.method}: ${req.path}\n`, (err,data) => {
@@ -45,6 +45,11 @@ app
     .get((req, res) => {
     const Id = Number(req.params.id);
     const user = users.find((user) => user.id === Id);
+    
+        if (!user) {
+        return res.status(404).json({ status: 'User not found' });
+    }
+
     return res.json(user);
 })
    .patch((req, res) => {
@@ -75,7 +80,6 @@ app.post('/api/users', (req, res) => {
     // save to json file
     fs.writeFileSync('./MOCK_DATA.json', JSON.stringify(users));
 
-    return res.json({ status: 'User created', user: newUser });
-});
+return res.status(201).json({ status: 'User created', user: newUser });});
 
 app.listen(PORT, () => { console.log(`Server is running on port ${PORT}`) });
