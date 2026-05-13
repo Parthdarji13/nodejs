@@ -1,9 +1,26 @@
 const express = require('express');
 const users = require('./MOCK_DATA.json');
+const mongoose = require('mongoose');
 const fs = require('fs');
 
 const app = express();
 const PORT = 8000;
+
+require('dotenv').config();
+
+mongoose.connect(process.env.MONGO_URL)
+.then(() => console.log('MongoDB connected!'))
+.catch((err) => console.log('Error:', err));
+
+//schema
+
+const userSchema = new mongoose.Schema({
+    first_name: { type: String, required: true },
+    last_name: { type: String },
+    email: { type: String, required: true, unique: true }
+});
+
+const User = mongoose.model('User', userSchema);
 
 // app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
@@ -35,9 +52,9 @@ const html = `
 
 //rest api
 
-app.get('/api/users', (req, res) => {
-    res.setHeader('X-myname', 'Parth');
-    res.json(users);
+app.get('/api/users', async (req, res) => {
+    const users = await User.find();
+    return res.json(users);
 });
 
 app
@@ -72,14 +89,30 @@ app
     return res.json({ status: 'User deleted' });
 });
 
-app.post('/api/users', (req, res) => {
+
+    // saves to MOCK_DATA.json
+
+// app.post('/api/users', (req, res) => {
+//     const body = req.body;
+//     const newUser = { id: users.length + 1, ...body };
+//     users.push(newUser);
+//     fs.writeFileSync('./MOCK_DATA.json', JSON.stringify(users));
+//     return res.status(201).json({ status: 'User created', user: newUser });
+// });
+
+// — saves to MongoDB
+app.post('/api/users', async (req, res) => {
     const body = req.body;
-    const newUser = { id: users.length + 1, ...body };
-    users.push(newUser);
-
-    // save to json file
-    fs.writeFileSync('./MOCK_DATA.json', JSON.stringify(users));
-
-return res.status(201).json({ status: 'User created', user: newUser });});
+    try {
+        const newUser = await User.create({
+            first_name: body.first_name,
+            last_name: body.last_name,
+            email: body.email,
+        });
+        return res.status(201).json({ status: 'User created', user: newUser });
+    } catch (err) {
+        return res.status(500).json({ status: 'Error', error: err.message });
+    }
+});
 
 app.listen(PORT, () => { console.log(`Server is running on port ${PORT}`) });
